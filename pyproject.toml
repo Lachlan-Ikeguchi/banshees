@@ -1,0 +1,19 @@
+[project]
+name = "banshee"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Lachlan Ikeguchi", email = "lachlan_ikeguchi@proton.me" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "gpiozero>=2.0.1.post3",
+]
+
+[project.scripts]
+banshee = "banshee:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
