@@ -8,7 +8,7 @@ import spidev
 
 spi = spidev.SpiDev()
 spi.open(0, 0)
-spi.max_speed_hz = 1000000  # 1 MHz
+spi.max_speed_hz = 3_600_000  # 3.6 MHz
 spi.mode = 0b00  # SPI Mode 0
 
 
