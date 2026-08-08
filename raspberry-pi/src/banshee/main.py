@@ -1,4 +1,5 @@
 import spidev
+import time
 
 def read_adc(channel):
     if channel < 0 or channel > 7: 
@@ -35,8 +36,25 @@ def main() -> None:
     except OSError as e:
         print(f"SPI Error: {e}")
         print("Ensure SPI is enabled: sudo raspi-config -> Interface Options -> SPI -> Enable")
+    
+
+    print("ADC TEST")
+
+    try:
+
+        while True:
+            channel = 0
+            adc_value = read_adc(channel)
+
+            print(
+                f"Channel {channel} "
+                f"ADC = {adc_value} "
+            )
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nProgram stopped")
     finally:
-        spi.close()
+            spi.close()
 
         
 
