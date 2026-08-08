@@ -1,10 +1,12 @@
-import argparse
 import struct
 import sys
 import time
 import wave
 
 import spidev
+
+SAMPLE_RATE = 18000
+DURATION = 20.0
 
 spi = spidev.SpiDev()
 spi.open(0, 0)
@@ -69,93 +71,21 @@ def record_wav(channel: int, duration: float, sample_rate: int, output_path: str
     return actual_rate
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Read the ADC multiplexer")
-    parser.add_argument(
-        "--stream",
-        action="store_true",
-        help="Emit flushed CSV rows (timestamp,ch0,...,chN) to stdout "
-        "instead of pretty-printing. Use this when piping into the local "
-        "live_plot.py viewer.",
-    )
-    parser.add_argument(
-        "--channels",
-        type=int,
-        default=1,
-        help="Number of multiplexed channels to read each cycle, "
-        "starting at channel 0 (default: 1)",
-    )
-    parser.add_argument(
-        "--rate",
-        type=float,
-        default=1.0,
-        help="Seconds to sleep between reads (default: 1.0)",
-    )
-    parser.add_argument(
-        "--record",
-        metavar="PATH",
-        help="Record a single channel to a WAV file at PATH instead of "
-        "streaming/printing, then exit. Play back with `aplay PATH` on "
-        "the Pi or any media player on a laptop.",
-    )
-    parser.add_argument(
-        "--channel",
-        type=int,
-        default=0,
-        help="Channel to sample when using --record (default: 0)",
-    )
-    parser.add_argument(
-        "--duration",
-        type=float,
-        default=5.0,
-        help="Seconds to record when using --record (default: 5.0)",
-    )
-    parser.add_argument(
-        "--sample-rate",
-        type=int,
-        default=8000,
-        help="Target sample rate in Hz when using --record (default: 8000)",
-    )
-    return parser.parse_args()
-
-
 def main() -> None:
-    args = parse_args()
-
-    if args.record:
-        try:
-            actual_rate = record_wav(
-                args.channel, args.duration, args.sample_rate, args.record
-            )
-        finally:
-            spi.close()
-        print(
-            f"Wrote {args.record} "
-            f"(target {args.sample_rate} Hz, actual {actual_rate:.0f} Hz)",
-            file=sys.stderr,
-        )
-        return
-
-    channels = list(range(args.channels))
+    output_path = f"{int(time.time())}.wav"
+    channel = 0
 
     try:
-        while True:
-            values = [read_adc(channel) for channel in channels]
-
-            if args.stream:
-                row = ",".join([f"{time.time():.6f}", *map(str, values)])
-                print(row, flush=True)
-            else:
-                readings = " ".join(
-                    f"Channel {ch} = {value}" for ch, value in zip(channels, values)
-                )
-                print(readings)
-
-            time.sleep(args.rate)
-    except KeyboardInterrupt:
-        print("\nProgram stopped", file=sys.stderr)
+        actual_rate = record_wav(
+            channel, DURATION, SAMPLE_RATE, output_path
+        )
     finally:
         spi.close()
+    print(
+        f"Wrote {output_path} "
+        f"(target {SAMPLE_RATE} Hz, actual {actual_rate:.0f} Hz)",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
