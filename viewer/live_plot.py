@@ -1,9 +1,9 @@
-"""Live line plot for ADC data streamed from the Pi over stdin.
+"""Live line plot for ADC data streamed from stdin.
 
-Run on the Linux laptop (not the Pi) — pipe the Pi's streamed output into it:
+Run directly on the Raspberry Pi — pipe the local streamed output into it:
 
-    ssh pi2 'cd banshees/raspberry-pi && uv run banshee --stream --channels 8 --rate 0.05' \\
-        | python3 live_plot.py
+    cd banshees/raspberry-pi && uv run banshee --stream --channels 8 --rate 0.05 \\
+        | python3 ../viewer/live_plot.py
 
 Each stdin line is expected to be CSV: `timestamp,ch0,ch1,...,chN`
 (this is exactly what `banshee --stream` prints).
