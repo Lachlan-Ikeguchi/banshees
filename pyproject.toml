@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "gpiozero>=2.0.1.post3",
+    "spidev>=3.8",
 ]
 
 [project.scripts]
