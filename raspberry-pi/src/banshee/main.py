@@ -1,6 +1,8 @@
 import spidev
 import time
 
+spi = spidev.SpiDev() 
+
 def read_adc(channel):
     if channel < 0 or channel > 7: 
         raise ValueError("Channel must be between 0 and 8")
@@ -21,7 +23,7 @@ def main() -> None:
     #   MISO: GPIO 9  (Pin 21)
     #   CLK:  GPIO 11 (Pin 23)
     #   CE0:  GPIO 8  (Pin 24)
-    spi = spidev.SpiDev()
+    
     try:
         spi.open(0, 0)
         spi.max_speed_hz = 1000000  # 1 MHz
