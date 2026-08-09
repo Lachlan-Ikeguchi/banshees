@@ -177,24 +177,55 @@ def stop_motor() -> None:
 
 
 def main() -> None:
-    # output_path = f"{int(time.time())}.wav"
-    # channel = 0
-
     try:
-        # actual_rate = record_wav(
-        #     channel, DURATION, SAMPLE_RATE, output_path
-        # )
-        INCREMENT = 1.0
-        for _ in range(5):
-            move_clockwise(INCREMENT)
-            move_counter_clockwise(INCREMENT)
+        # Round-robin recording parameters
+        duration = 0.1  # 100ms
+        sample_rate = SAMPLE_RATE  # 18000 Hz (max documented)
+        num_channels = 4
+        
+        # Initialize sample storage
+        channel_samples = {i: [] for i in range(num_channels)}
+        
+        # Calculate timing
+        sample_period = 1.0 / sample_rate
+        total_samples = int(duration * sample_rate)  # 1800 samples
+        samples_per_channel = total_samples // num_channels  # 450 per channel
+        
+        # Round-robin recording loop
+        start_time = time.perf_counter()
+        end_time = start_time + duration
+        current_channel = 0
+        next_sample_time = start_time
+        sample_count = 0
+        
+        while time.perf_counter() < end_time and sample_count < total_samples:
+            # Record sample from current channel
+            channel_samples[current_channel].append(read_adc(current_channel))
+            
+            # Move to next channel
+            current_channel = (current_channel + 1) % num_channels
+            sample_count += 1
+            
+            # Timing
+            next_sample_time += sample_period
+            sleep_for = next_sample_time - time.perf_counter()
+            if sleep_for > 0:
+                time.sleep(sleep_for)
+        
+        # Signal processing placeholder
+        # TODO: Put bearing estimation logic here using the 4 data streams
+        channel_0_data = channel_samples[0]
+        channel_1_data = channel_samples[1]
+        channel_2_data = channel_samples[2]
+        channel_3_data = channel_samples[3]
+        
+        # Point motor towards sound (rhythmic for now)
+        while True:
+            move_clockwise(0.5)
+            move_counter_clockwise(0.5)
+            
     finally:
         spi.close()
-    # print(
-    #     f"Wrote {output_path} "
-    #     f"(target {SAMPLE_RATE} Hz, actual {actual_rate:.0f} Hz)",
-    #     file=sys.stderr,
-    # )
 
 
 if __name__ == "__main__":
