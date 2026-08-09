@@ -5,7 +5,7 @@ from mock_audio import get_mic_audio
 from DSP import cross_correlation, signal_delay
 
 n_mics = 2
-time_win = 1 # [s]
+time_win = 2 # [s]
 samp_rate = 1000 # [Hz]
 n_samps = samp_rate * time_win + 1
 speed_sound = 340.29 # [m/s] @ 20 C sea-level
@@ -41,7 +41,9 @@ def main():
 
     for idx_mic in range(n_mics-1):
         delay_norm = mic_delays[idx_mic] / max_mic_delay
-        mic_plane_bearing_est[idx_mic] = 90 + delay_norm*90 # [deg]
+        print("delay_norm", delay_norm)
+        mic_plane_bearing_est[idx_mic] = np.clip( delay_norm*180, a_min=0, a_max=180 ) # [deg]
+        print("mic_plane_bearing_est", mic_plane_bearing_est)
 
     plt.show()
 
