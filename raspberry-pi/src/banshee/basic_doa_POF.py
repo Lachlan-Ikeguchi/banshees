@@ -8,18 +8,14 @@ n_mics = 2
 time_win = 1 # [s]
 samp_rate = 1000 # [Hz]
 n_samps = samp_rate * time_win + 1
-print("n_samps", n_samps)
 speed_sound = 340.29 # [m/s] @ 20 C sea-level
 mic_phys_dist = 340.29 # [m]
 max_mic_delay = mic_phys_dist / speed_sound # [s] maximum theoretical delay between mics (sound travelling parallel to plane formed by mic pair)
-print(max_mic_delay)
 
 def main():
     audio_mat_shape = (n_mics, n_samps)
     mic_audio = np.zeros(audio_mat_shape)
     fft_len = n_samps*2-1
-    print("fft_len", fft_len)
-    # mic_cross_corrls = np.zeros((n_mics-1, fft_len))
     mic_cross_corrls = np.zeros((n_mics-1, fft_len-1))
     mic_delays = np.zeros(n_mics-1)
     mic_plane_bearing_est = np.zeros(n_mics-1)
@@ -32,14 +28,10 @@ def main():
     ax[1].plot(mic_audio[1])
 
     for idx_mic in range(n_mics-1):
-        print("mic_audio", len(mic_audio[0]))
         asdf = cross_correlation(mic_audio[0], mic_audio[idx_mic+1], fft_len)
-        print(len(mic_cross_corrls[0]), len(asdf))
         mic_cross_corrls[idx_mic] = asdf
 
-    # lags = np.arange(-n_samps + 1, n_samps)
     lags = np.arange(-n_samps + 1, n_samps - 1)
-    # lags = np.arange(-n_samps + 1, n_samps + 1)
     fig, ax = plt.subplots()
     ax.plot(lags, mic_cross_corrls[0])
 
@@ -49,9 +41,7 @@ def main():
 
     for idx_mic in range(n_mics-1):
         delay_norm = mic_delays[idx_mic] / max_mic_delay
-        print(delay_norm)
         mic_plane_bearing_est[idx_mic] = 90 + delay_norm*90 # [deg]
-        print(mic_plane_bearing_est)
 
     plt.show()
 
