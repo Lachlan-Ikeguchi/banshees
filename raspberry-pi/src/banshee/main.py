@@ -1,5 +1,6 @@
 import struct
 import sys
+import threading
 import time
 import wave
 
@@ -15,6 +16,11 @@ M1A_PIN = 27
 M1B_PIN = 22
 step_pin = DigitalOutputDevice(M1A_PIN)
 direction_pin = DigitalOutputDevice(M1B_PIN)
+
+# Motor movement thread management
+_movement_thread: threading.Thread | None = None
+_stop_event = threading.Event()
+_movement_lock = threading.Lock()
 
 spi = spidev.SpiDev()
 spi.open(0, 0)
@@ -79,26 +85,95 @@ def record_wav(channel: int, duration: float, sample_rate: int, output_path: str
     return actual_rate
 
 
-def move_clockwise(duration: float) -> None:
-    """Move motor clockwise for duration seconds."""
+def _move_clockwise_blocking(duration: float) -> None:
+    """Internal blocking function to move motor clockwise for duration seconds."""
     direction_pin.on()
     end_time = time.time() + duration
-    while time.time() < end_time:
+    while time.time() < end_time and not _stop_event.is_set():
         step_pin.on()
         time.sleep(STEP_DELAY)
         step_pin.off()
         time.sleep(STEP_DELAY)
 
 
-def move_counter_clockwise(duration: float) -> None:
-    """Move motor counter-clockwise for duration seconds."""
+def _move_counter_clockwise_blocking(duration: float) -> None:
+    """Internal blocking function to move motor counter-clockwise for duration seconds."""
     direction_pin.off()
     end_time = time.time() + duration
-    while time.time() < end_time:
+    while time.time() < end_time and not _stop_event.is_set():
         step_pin.on()
         time.sleep(STEP_DELAY)
         step_pin.off()
         time.sleep(STEP_DELAY)
+
+
+def move_clockwise(duration: float) -> threading.Thread:
+    """Start moving motor clockwise for duration seconds. Returns immediately.
+    
+    Returns the Thread object for optional management (join, etc.).
+    If a movement is already in progress, it will be stopped first.
+    """
+    global _movement_thread
+    
+    with _movement_lock:
+        # Stop any current movement
+        if _movement_thread is not None:
+            _stop_event.set()
+            _movement_thread.join(timeout=0.05)  # Short timeout to signal stop
+            _movement_thread = None
+        
+        # Clear the stop event for the new movement
+        _stop_event.clear()
+        
+        # Start new movement thread
+        _movement_thread = threading.Thread(
+            target=_move_clockwise_blocking,
+            args=(duration,),
+            daemon=True
+        )
+        _movement_thread.start()
+        return _movement_thread
+
+
+def move_counter_clockwise(duration: float) -> threading.Thread:
+    """Start moving motor counter-clockwise for duration seconds. Returns immediately.
+    
+    Returns the Thread object for optional management (join, etc.).
+    If a movement is already in progress, it will be stopped first.
+    """
+    global _movement_thread
+    
+    with _movement_lock:
+        # Stop any current movement
+        if _movement_thread is not None:
+            _stop_event.set()
+            _movement_thread.join(timeout=0.05)  # Short timeout to signal stop
+            _movement_thread = None
+        
+        # Clear the stop event for the new movement
+        _stop_event.clear()
+        
+        # Start new movement thread
+        _movement_thread = threading.Thread(
+            target=_move_counter_clockwise_blocking,
+            args=(duration,),
+            daemon=True
+        )
+        _movement_thread.start()
+        return _movement_thread
+
+
+def stop_motor() -> None:
+    """Stop any currently running motor movement."""
+    global _movement_thread
+    
+    with _movement_lock:
+        if _movement_thread is not None:
+            _stop_event.set()
+            # Wait briefly for the thread to finish
+            _movement_thread.join(timeout=0.05)
+            _movement_thread = None
+        _stop_event.clear()
 
 
 def main() -> None:
