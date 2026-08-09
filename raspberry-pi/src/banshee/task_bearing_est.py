@@ -12,7 +12,7 @@ speed_sound = 340.29 # [m/s] @ 20 C sea-level
 mic_phys_dist = 340.29 # [m]
 max_mic_delay = mic_phys_dist / speed_sound # [s] maximum theoretical delay between mics (sound travelling parallel to plane formed by mic pair)
 
-def loop_bearing_est(mic_audio, n_samps, samp_rate, time_win):
+def loop_bearing_est(mic_audio, n_samps, samp_rate):
     fft_len = n_samps*2-1
     audio_mat_shape = (n_mics, n_samps)
     mic_audio = np.zeros(audio_mat_shape)
