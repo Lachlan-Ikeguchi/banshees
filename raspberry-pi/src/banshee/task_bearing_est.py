@@ -1,6 +1,6 @@
 import numpy as np
 
-from DSP import cross_correlation, signal_delay
+from banshee.DSP import cross_correlation, signal_delay
 
 n_mics = 4
 mic_plane_offset = 360 // n_mics
@@ -15,10 +15,11 @@ max_mic_delay = mic_phys_dist / speed_sound # [s] maximum theoretical delay betw
 def loop_bearing_est(mic_audio, n_samps, samp_rate):
     fft_len = n_samps*2-1
     audio_mat_shape = (n_mics, n_samps)
-    mic_audio = np.zeros(audio_mat_shape)
+    # mic_audio = np.zeros(audio_mat_shape)
     # mic_cross_corrls = np.zeros((n_mics-1, fft_len-1))
     mic_cross_corrls_frt_bk = np.zeros((fft_len-1,))
     mic_cross_corrls_l_r = np.zeros((fft_len-1,))
+    # print(mic_audio.shape)
     # mic_delays = np.zeros(n_mics-1)
     mic_delay_frt_bk = 0
     mic_delay_l_r = 0
