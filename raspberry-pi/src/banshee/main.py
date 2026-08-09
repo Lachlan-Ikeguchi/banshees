@@ -6,7 +6,7 @@ import wave
 import spidev
 from gpiozero import DigitalOutputDevice
 
-STEP_DELAY = 0.001
+STEP_DELAY = 1
 
 SAMPLE_RATE = 18000
 DURATION = 20.0
@@ -110,13 +110,9 @@ def main() -> None:
         #     channel, DURATION, SAMPLE_RATE, output_path
         # )
         INCREMENT = 1.0
-        for _ in range(3):
+        for _ in range(5):
             move_clockwise(INCREMENT)
-            time.sleep(0.5)
             move_counter_clockwise(INCREMENT)
-            time.sleep(0.5)
-            move_clockwise(INCREMENT)
-            time.sleep(0.5)
     finally:
         spi.close()
     # print(
