@@ -4,9 +4,17 @@ import time
 import wave
 
 import spidev
+from gpiozero import DigitalOutputDevice
+
+STEP_DELAY = 0.001
 
 SAMPLE_RATE = 18000
 DURATION = 20.0
+
+M1A_PIN = 27
+M1B_PIN = 22
+step_pin = DigitalOutputDevice(M1A_PIN)
+direction_pin = DigitalOutputDevice(M1B_PIN)
 
 spi = spidev.SpiDev()
 spi.open(0, 0)
@@ -71,21 +79,51 @@ def record_wav(channel: int, duration: float, sample_rate: int, output_path: str
     return actual_rate
 
 
+def move_clockwise(duration: float) -> None:
+    """Move motor clockwise for duration seconds."""
+    direction_pin.on()
+    end_time = time.time() + duration
+    while time.time() < end_time:
+        step_pin.on()
+        time.sleep(STEP_DELAY)
+        step_pin.off()
+        time.sleep(STEP_DELAY)
+
+
+def move_counter_clockwise(duration: float) -> None:
+    """Move motor counter-clockwise for duration seconds."""
+    direction_pin.off()
+    end_time = time.time() + duration
+    while time.time() < end_time:
+        step_pin.on()
+        time.sleep(STEP_DELAY)
+        step_pin.off()
+        time.sleep(STEP_DELAY)
+
+
 def main() -> None:
-    output_path = f"{int(time.time())}.wav"
-    channel = 0
+    # output_path = f"{int(time.time())}.wav"
+    # channel = 0
 
     try:
-        actual_rate = record_wav(
-            channel, DURATION, SAMPLE_RATE, output_path
-        )
+        # actual_rate = record_wav(
+        #     channel, DURATION, SAMPLE_RATE, output_path
+        # )
+        INCREMENT = 1.0
+        for _ in range(3):
+            move_clockwise(INCREMENT)
+            time.sleep(0.5)
+            move_counter_clockwise(INCREMENT)
+            time.sleep(0.5)
+            move_clockwise(INCREMENT)
+            time.sleep(0.5)
     finally:
         spi.close()
-    print(
-        f"Wrote {output_path} "
-        f"(target {SAMPLE_RATE} Hz, actual {actual_rate:.0f} Hz)",
-        file=sys.stderr,
-    )
+    # print(
+    #     f"Wrote {output_path} "
+    #     f"(target {SAMPLE_RATE} Hz, actual {actual_rate:.0f} Hz)",
+    #     file=sys.stderr,
+    # )
 
 
 if __name__ == "__main__":
